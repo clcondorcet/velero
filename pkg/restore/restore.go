@@ -35,6 +35,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	corev1api "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/equality"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -2636,4 +2637,37 @@ func determineRestoreStatus(
 		kube.NamespaceAndName(obj), shouldRestoreStatus, annotationExists, shouldRestoreStatus)
 
 	return shouldRestoreStatus
+}
+
+func hasDisabledPVReprovisioningStorageClass(unstructuredPV *unstructured.Unstructured, ctx *restoreContext) (bool, error) {
+	disabledStorageClasses := ctx.restore.Spec.DisabledPVReprovisioningStorageClasses
+
+	// Converting Unstructured to PV object.
+	pv := new(v1.PersistentVolume)
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructuredPV.Object, pv); err != nil {
+		return false, errors.Wrapf(err, "error converting persistent volume to structured")
+	}
+
+	// Checking if PV StorageClass is in the DisabledPVReprovisioningStorageClasses list.
+	for _, disabledStorageClass := range disabledStorageClasses {
+		if disabledStorageClass == pv.Spec.StorageClassName {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (ctx *restoreContext) handleSkippedPVHasDisabledReprovisioningStorageClass(
+	obj *unstructured.Unstructured,
+	logger logrus.FieldLogger,
+) (*unstructured.Unstructured, error) {
+	logger.Infof("Restoring persistent volume as-is because it doesn't have a snapshot and it's storage class has re-provisionning disabled.")
+
+	// Check to see if the claimRef.namespace field needs to be remapped, and do so if necessary.
+	if _, err := remapClaimRefNS(ctx, obj); err != nil {
+		return nil, err
+	}
+
+	obj = resetVolumeBindingInfo(obj)
+	return obj, nil
 }
