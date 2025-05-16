@@ -104,6 +104,8 @@ const (
 
 	// PVBLabel is the label key used to identify the pvb for pvb pod
 	PVBLabel = "velero.io/pod-volume-backup"
+	// defaultVGSLabelKey is the default label key used to group PVCs under a VolumeGroupSnapshot
+	DefaultVGSLabelKey = "velero.io/volume-group"
 )
 
 type AsyncOperationIDPrefix string
