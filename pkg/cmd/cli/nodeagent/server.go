@@ -79,6 +79,7 @@ const (
 	// defaultCredentialsDirectory is the path on disk where credential
 	// files will be written to
 	defaultCredentialsDirectory = "/tmp/credentials"
+	defaultHostPodsPath         = "/host_pods"
 
 	defaultResourceTimeout         = 10 * time.Minute
 	defaultDataMoverPrepareTimeout = 30 * time.Minute
@@ -289,7 +290,7 @@ func (s *nodeAgentServer) run() {
 	credentialFileStore, err := credentials.NewNamespacedFileStore(
 		s.mgr.GetClient(),
 		s.namespace,
-		defaultCredentialsDirectory,
+		credentials.DefaultStoreDirectory(),
 		filesystem.NewFileSystem(),
 	)
 	if err != nil {
