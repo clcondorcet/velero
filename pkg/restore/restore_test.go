@@ -2367,19 +2367,19 @@ func assertRestoredItems(t *testing.T, h *harness, want []*test.APIResource) {
 			}
 
 			res, err := client.Get(context.TODO(), item.GetName(), metav1.GetOptions{})
-			if !assert.NoError(t, err) {
+			if !assert.NoError(t, err) { //nolint:testifylint // require is inappropriate
 				continue
 			}
 
 			itemJSON, err := json.Marshal(item)
-			if !assert.NoError(t, err) {
+			if !assert.NoError(t, err) { //nolint:testifylint // require is inappropriate
 				continue
 			}
 
 			t.Logf("%v", string(itemJSON))
 
 			u := make(map[string]any)
-			if !assert.NoError(t, json.Unmarshal(itemJSON, &u)) {
+			if !assert.NoError(t, json.Unmarshal(itemJSON, &u)) { //nolint:testifylint // require is inappropriate
 				continue
 			}
 			want := &unstructured.Unstructured{Object: u}
@@ -3819,7 +3819,7 @@ func (cr *createRecorder) reactor() func(kubetesting.Action) (bool, runtime.Obje
 		}
 
 		accessor, err := meta.Accessor(createAction.GetObject())
-		assert.NoError(cr.t, err)
+		require.NoError(cr.t, err)
 
 		cr.resources = append(cr.resources, resourceID{
 			groupResource: action.GetResource().GroupResource().String(),
@@ -3842,7 +3842,7 @@ func assertAPIContents(t *testing.T, h *harness, want map[*test.APIResource][]st
 
 	for r, want := range want {
 		res, err := h.DynamicClient.Resource(r.GVR()).List(context.TODO(), metav1.ListOptions{})
-		assert.NoError(t, err)
+		require.NoError(t, err)
 		if err != nil {
 			continue
 		}
