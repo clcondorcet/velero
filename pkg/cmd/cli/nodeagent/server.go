@@ -305,10 +305,6 @@ func (s *nodeAgentServer) run() {
 	credentialGetter := &credentials.CredentialGetter{FromFile: credentialFileStore, FromSecret: credSecretStore}
 	repoEnsurer := repository.NewEnsurer(s.mgr.GetClient(), s.logger, s.config.resourceTimeout)
 
-	if err = controller.NewPodVolumeRestoreReconciler(s.mgr.GetClient(), s.kubeClient, s.dataPathMgr, repoEnsurer, credentialGetter, s.logger).SetupWithManager(s.mgr); err != nil {
-		s.logger.WithError(err).Fatal("Unable to create the pod volume restore controller")
-	}
-
 	var loadAffinity *kube.LoadAffinity
 	if s.dataPathConfigs != nil && len(s.dataPathConfigs.LoadAffinity) > 0 {
 		loadAffinity = s.dataPathConfigs.LoadAffinity[0]
@@ -335,6 +331,9 @@ func (s *nodeAgentServer) run() {
 
 	if err := pvbReconciler.SetupWithManager(s.mgr); err != nil {
 		s.logger.Fatal(err, "unable to create controller", "controller", constant.ControllerPodVolumeBackup)
+	}
+	if err = controller.NewPodVolumeRestoreReconciler(s.mgr.GetClient(), s.mgr, s.kubeClient, s.dataPathMgr, s.nodeName, s.config.dataMoverPrepareTimeout, s.config.resourceTimeout, podResources, s.logger).SetupWithManager(s.mgr); err != nil {
+		s.logger.WithError(err).Fatal("Unable to create the pod volume restore controller")
 	}
 
 	dataUploadReconciler := controller.NewDataUploadReconciler(
@@ -530,7 +529,7 @@ func (s *nodeAgentServer) markInProgressPVRsFailed(client ctrlclient.Client) {
 			continue
 		}
 
-		if err := controller.UpdatePVRStatusToFailed(s.ctx, client, &pvrs.Items[i],
+		if err := controller.UpdatePVRStatusToFailed(s.ctx, client, &pvrs.Items[i], errors.New("cannot survive from node-agent restart"),
 			fmt.Sprintf("get a podvolumerestore with status %q during the server starting, mark it as %q", velerov1api.PodVolumeRestorePhaseInProgress, velerov1api.PodVolumeRestorePhaseFailed),
 			time.Now(), s.logger); err != nil {
 			s.logger.WithError(errors.WithStack(err)).Errorf("failed to patch podvolumerestore %q", pvr.GetName())
