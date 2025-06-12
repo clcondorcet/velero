@@ -46,7 +46,7 @@ import (
 	ctrlclient "sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	snapshotv1client "github.com/kubernetes-csi/external-snapshotter/client/v7/clientset/versioned"
+	snapshotv1client "github.com/kubernetes-csi/external-snapshotter/client/v8/clientset/versioned"
 
 	"github.com/vmware-tanzu/velero/internal/credentials"
 	velerov1api "github.com/vmware-tanzu/velero/pkg/apis/velero/v1"
