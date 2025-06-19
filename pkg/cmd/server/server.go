@@ -961,7 +961,6 @@ func markInProgressBackupsFailed(ctx context.Context, client ctrlclient.Client, 
 		}
 		log.WithField("backup", backup.GetName()).Warn(updated.Status.FailureReason)
 		markDataUploadsCancel(ctx, client, backup, log)
-		markPodVolumeBackupsCancel(ctx, client, backup, log)
 	}
 }
 
@@ -987,7 +986,6 @@ func markInProgressRestoresFailed(ctx context.Context, client ctrlclient.Client,
 
 		log.WithField("restore", restore.GetName()).Warn(updated.Status.FailureReason)
 		markDataDownloadsCancel(ctx, client, restore, log)
-		markPodVolumeRestoresCancel(ctx, client, restore, log)
 	}
 }
 
